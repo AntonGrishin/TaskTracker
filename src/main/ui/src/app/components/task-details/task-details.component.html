@@ -37,7 +37,7 @@
         <select class="form-control"
                 id="assigned"
                 [(ngModel)]="currentTask.assigned"
-                name="assigned"W
+                name="assigned"
                 >
           <option> --- </option>
           <option *ngFor="let user of users" [value]="user.username" [selected]="currentTask.assigned == user.username">{{user.lastname}}, {{user.firstname}}</option>
