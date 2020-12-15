@@ -90,11 +90,4 @@ export class TaskDetailsComponent implements OnInit {
           console.log(error);
         });
   }
-
-  isUserAssigned(user: User) {
-    if (this.currentTask.assigned.indexOf(`${user.lastname}, ${user.firstname}`) !== -1) {
-      return true;
-    }
-    return false;
-  }
 }
