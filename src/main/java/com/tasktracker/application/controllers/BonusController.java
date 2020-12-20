@@ -54,7 +54,8 @@ public class BonusController {
     @PostMapping(path = BonusLinks.ADD_BONUS)
     public ResponseEntity<?> addBonus(@RequestBody Bonus bonus) {
         try {
-            bonusRepository.save(new Bonus(bonus.getUserId(), bonus.getComment(), bonus.getMonth(), bonus.getAmount()));
+            bonusRepository.save(new Bonus(bonus.getUserId(), bonus.getComment(), bonus.getMonth(), bonus.getYear(),
+                    bonus.getAmount()));
             log.info("Bonus controller:  add bonus");
             return new ResponseEntity<>(new MessageResponse("Comment has been added successfully!"), HttpStatus.OK);
         } catch (Exception e) {
@@ -72,6 +73,7 @@ public class BonusController {
             _bonus.setUserId(bonus.getUserId());
             _bonus.setComment(bonus.getComment());
             _bonus.setMonth(bonus.getMonth());
+            _bonus.setYear(bonus.getYear());
             _bonus.setAmount(bonus.getAmount());
             return new ResponseEntity<>(bonusRepository.save(_bonus), HttpStatus.OK);
         } else {
@@ -79,12 +81,12 @@ public class BonusController {
         }
     }
 
-    @GetMapping("/bonus/{user_id}/{month}")
-    public ResponseEntity<?> getBonusByUserMonth(@PathVariable("user_id") String user_id, @PathVariable("month") String month) {
-        List<Bonus> bonusData = bonusRepository.findByUserIdAndMonth(user_id, month);
+    @GetMapping("/bonus/{user_id}/{month}/{year}")
+    public ResponseEntity<?> getBonusByUserMonth(@PathVariable("user_id") String user_id,
+            @PathVariable("month") String month, @PathVariable("year") String year) {
+        List<Bonus> bonusData = bonusRepository.findByUserIdAndMonthAndYear(user_id, month, year);
 
-        if(bonusData.isEmpty())
-        {
+        if (bonusData.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<>(bonusData, HttpStatus.OK);

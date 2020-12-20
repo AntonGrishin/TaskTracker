@@ -26,15 +26,20 @@ public class Bonus {
   private String month;
 
   @NotBlank
+  @Column(name = "year")
+  private String year;
+
+  @NotBlank
   @Column(name = "amount")
   private String amount;
 
   public Bonus() {}
 
-  public Bonus(@NotBlank String userId, @NotBlank String comment, @NotBlank String month, @NotBlank String amount) {
+  public Bonus(@NotBlank String userId, @NotBlank String comment, @NotBlank String month, @NotBlank String year, @NotBlank String amount) {
       this.userId = userId;
       this.comment = comment;
       this.month = month;
+      this.year = year;
       this.amount = amount;
   }
 
@@ -82,6 +87,14 @@ public class Bonus {
   public String toString() {
       return "Bonus [amount=" + amount + ", bonus_id=" + bonus_id + ", comment=" + comment + ", month=" + month
               + ", userId=" + userId + "]";
+  }
+
+  public String getYear() {
+      return year;
+  }
+
+  public void setYear(String year) {
+      this.year = year;
   }
 
   

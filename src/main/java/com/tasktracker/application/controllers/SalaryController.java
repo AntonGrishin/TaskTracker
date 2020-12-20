@@ -2,6 +2,7 @@ package com.tasktracker.application.controllers;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
@@ -59,34 +60,40 @@ public class SalaryController {
     @Autowired
     TaskRepository taskRepository;
 
-    @GetMapping("/salary/{user_id}/{month}")
+    public Date toDate(LocalDate dateToConvert) {
+        return java.sql.Date.valueOf(dateToConvert);
+    }
+
+    @GetMapping("/salary/{user_id}/{month}/{year}")
     public ResponseEntity<?> getUserSalaryByMonth(@PathVariable("user_id") String user_id,
-            @PathVariable("month") String month) throws ParseException {
-        List<Bonus> bonusData = bonusRepository.findByUserIdAndMonth(user_id, month);
+            @PathVariable("month") String month, @PathVariable("year") String year) throws ParseException {
+        List<Bonus> bonusData = bonusRepository.findByUserIdAndMonthAndYear(user_id, month, year);
         User userData = userRepository.findById(Long.parseLong(user_id)).get();
         List<Task> taskData = taskRepository.findByResolvedAndAssigned(true, userData.getUsername());
 
-        if (userData == null) {
-            log.info("user salary:  null user");
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        YearMonth yearMonth = YearMonth.of(Year.now().getValue(), Month.of(Integer.parseInt(month)));
+        YearMonth yearMonth = YearMonth.of(Integer.parseInt(year), Month.of(Integer.parseInt(month)));
         Float daysInMonth = Float.valueOf(yearMonth.lengthOfMonth());
         Float baseSalary = Float.parseFloat(userData.getBaseSalary());
         Float dailySalary = baseSalary / daysInMonth;
         Float fullSalary = 0f;
+
+        LocalDate firstOfMonth = yearMonth.atDay(1);
+        LocalDate last = yearMonth.atEndOfMonth();
 
         for (Task task : taskData) {
             // date store like yyyy-MM-dd
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             Date endDate = sdf.parse(StringUtils.substring(task.getEta(), 0, 10));
             Date startDate = sdf.parse(StringUtils.substring(task.getStartDate(), 0, 10));
-            Long estimatedDays = ChronoUnit.DAYS.between(startDate.toInstant(), endDate.toInstant());
-            Long points = Long.parseLong(task.getPoints());
-            Float estimationCoef = estimatedDays.floatValue() / points.floatValue();
 
-            fullSalary += dailySalary * estimationCoef * points.floatValue();
+            if (endDate.after(toDate(firstOfMonth)) && endDate.before(toDate(last))
+                    && startDate.after(toDate(firstOfMonth)) && startDate.before(toDate(last))) {
+                Long estimatedDays = ChronoUnit.DAYS.between(startDate.toInstant(), endDate.toInstant());
+                Long points = Long.parseLong(task.getPoints());
+                Float estimationCoef = estimatedDays.floatValue() / points.floatValue();
+
+                fullSalary += dailySalary * estimationCoef * points.floatValue();
+            }
         }
 
         for (Bonus bonus : bonusData) {

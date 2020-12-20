@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 public interface BonusRepository extends JpaRepository<Bonus, Long> {
   List<Bonus> findByMonth(String month);
   List<Bonus> findByUserIdAndMonth(String userId, String Month);
+  List<Bonus> findByUserIdAndMonthAndYear(String userId, String Month, String Year);
 }
 
 
