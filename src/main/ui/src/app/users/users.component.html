@@ -18,13 +18,14 @@
 
 <div *ngFor="let user of users">
   <div class="card"
-       (click)="selectUser(user)"
+       
   >
+  <div class="navi" (click)="selectUser(user)">
     <h4>{{user.firstname}} {{user.lastname}}</h4>
     <div> <b>username:</b> {{user.username}} </div>
     <div> <b>e-mail:</b> {{user.email}}</div>
     <div> <b>role:</b> {{getStrRoles(user.roles)}}</div>
-    
+    </div>
     <button *ngIf="!isAdmin(user)" type="button" class="btn edit-user-button" (click)="openModal(template, 'edit', user)"> Edit </button>
     <button *ngIf="!isAdmin(user)" type="button" class="btn delete-user-button" (click)="deleteUser(user)"> Delete </button>
 

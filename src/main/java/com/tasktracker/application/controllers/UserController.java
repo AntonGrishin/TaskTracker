@@ -60,7 +60,7 @@ public class UserController {
     }
 
     @RequestMapping(value = UserLinks.UPDATE_USER, method = RequestMethod.POST)
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN, ROLE_MODERATOR')")
     public ResponseEntity<?> updateUser(@RequestBody User user) {
         log.info("UsersController:  update user");
         User resource = userService.updateUser(user);
@@ -74,6 +74,7 @@ public class UserController {
         userService.deleteUser(user);
     }
 
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN, ROLE_MODERATOR')")
     @GetMapping("/users/{id}")
     public ResponseEntity<?> getUserById(@PathVariable("id") long id) {
 

@@ -102,7 +102,7 @@ public class TokenAuthenticationServiceTest {
         String token = object.getString("accessToken");
         System.out.println(token);
     
-        mvc.perform(MockMvcRequestBuilders.get("/api/users")
+        mvc.perform(MockMvcRequestBuilders.get("/api/users/2")
             .header("Authorization", "Bearer " + token))
             .andExpect(status().isForbidden());
         }
