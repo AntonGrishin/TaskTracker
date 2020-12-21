@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -64,42 +66,47 @@ public class TaskController {
     @RequestParam(required = false) String taskTitle
   ) {
     try {
-      List<Task> tasks = new ArrayList<Task>();
-      if (taskTitle == null) taskRepository
-        .findAll()
-        .forEach(tasks::add); else taskRepository
-        .findByTaskTitleContaining(taskTitle)
-        .forEach(tasks::add);
 
-      if (tasks.isEmpty()) {
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-      }
-
-      return new ResponseEntity<>(tasks, HttpStatus.OK);
-    } catch (Exception e) {
-      return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  @GetMapping("/my_tasks")
-  public ResponseEntity<List<Task>> getAllMyTasks(
-    @RequestParam(required = false) String assigne,
-    SignupRequest signUpRequest
-  ) {
-    UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder
+      UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder
       .getContext()
       .getAuthentication()
       .getPrincipal();
 
-    String firstname = userDetails.getFirstname();
-    String lastname = userDetails.getLastname();
-    String fullname = lastname + ", " + firstname;
-    List<Task> tasks = taskRepository.findByAssigned(fullname);
+      List<Task> tasks = new ArrayList<Task>();
 
-    if (tasks.isEmpty()) {
-      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+      List<String> roles = userDetails.getAuthorities().stream()
+      .map(item -> item.getAuthority())
+      .collect(Collectors.toList());
+
+      boolean isModAdm = roles.contains("ROLE_MODERATOR") || roles.contains("ROLE_ADMIN");
+      if(isModAdm)
+      {
+        if (taskTitle == null) taskRepository
+            .findAll()
+            .forEach(tasks::add); else taskRepository
+            .findByTaskTitleContaining(taskTitle)
+            .forEach(tasks::add);
+      }
+      else
+      {
+        if (taskTitle == null) taskRepository
+            .findByAssigned(userDetails.getUsername())
+            .forEach(tasks::add); else taskRepository
+            .findByTaskTitleContainingAndAssigned(taskTitle, userDetails.getUsername())
+            .forEach(tasks::add);
+      }
+
+      if (tasks.isEmpty()) {
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+      }
+      for (Task task : tasks) {
+          User user = userService.getUserByUsername(task.getAssigned());
+          task.setAssigned(user.getFullname());
+      }
+      return new ResponseEntity<>(tasks, HttpStatus.OK);
+    } catch (Exception e) {
+      return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    return new ResponseEntity<>(tasks, HttpStatus.OK);
   }
 
   @GetMapping("/tasks/{id}")
@@ -113,25 +120,17 @@ public class TaskController {
       List<Comment> comments = new ArrayList<Comment>();
       String task_id = Long.toString(id);
       comments = commentRepository.findByTaskId(task_id);
-      //comments = commentRepository.findByTaskId(id);
 
       for (Comment comment : comments) {
         User cur_user = userService.getUser(Long.parseLong(comment.getUserId()));
-
-        String firstname = cur_user.getFirstname();
-        String lastname = cur_user.getLastname();
-        String fullname = lastname + ", " + firstname;
-        comment.setUserId(fullname);
+        comment.setUserId(cur_user.getFullname());
       }
       task.setComments(comments);
-      
+
       return new ResponseEntity<Task>(task, HttpStatus.OK);
     } else {
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
-
-
-
   }
 
   @PostMapping("/tasks")

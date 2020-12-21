@@ -122,5 +122,9 @@ public class User {
         this.baseSalary = baseSalary;
     }
 
+    public String getFullname()
+    {
+        return lastname + ", " + firstname;
+    }
 
 }

@@ -42,6 +42,10 @@ export class UserService {
     return this.http.get<User>(`${USERS_URL}/users/${userId}`, httpOptions);
   }
 
+  getUserByUsername(username): Observable<User> {
+    return this.http.get<User>(`${USERS_URL}/user/${username}`, httpOptions);
+  }
+
   editeUser(user: any): Observable<any> {
     return this.http.post(`${USERS_URL}/user_update`, user, httpOptions);
   }

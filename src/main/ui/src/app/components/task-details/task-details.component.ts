@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { TaskService } from '../../_services/task.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from 'src/app/_services/user.service';
-import { User } from 'src/app/models/user-roles';
+import { User, userRoles } from 'src/app/models/user-roles';
 import { TaskStatuses, TaskStatusesModel } from 'src/app/models/task.model';
+import { TokenStorageService } from 'src/app/_services/token-storage.service';
 
 @Component({
   selector: 'app-task-details',
@@ -15,17 +16,30 @@ export class TaskDetailsComponent implements OnInit {
   message = '';
   users: User[] = [];
   taskStatuses = TaskStatuses;
+  currentUser: User;
+  private roles: string[];
+
+  isAdmin = null;
+  isModerator = null;
 
   constructor(
     private taskService: TaskService,
     private route: ActivatedRoute,
     private router: Router,
-    private userService: UserService) { }
+    private userService: UserService,
+    private tokenStorageService: TokenStorageService
+    ) { }
 
   ngOnInit(): void {
     this.message = '';
     this.getTask(this.route.snapshot.paramMap.get('id'));
     this.getUsers();
+
+    const user = this.tokenStorageService.getUser();
+    this.roles = user.roles;
+  
+    this.isAdmin = this.roles.includes('ROLE_ADMIN');
+    this.isModerator = this.roles.includes('ROLE_MODERATOR');
   }
 
   getTask(id): void {

@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -60,8 +61,12 @@ public class SalaryController {
     @Autowired
     TaskRepository taskRepository;
 
-    public Date toDate(LocalDate dateToConvert) {
+    private Date convToDate(LocalDate dateToConvert) {
         return java.sql.Date.valueOf(dateToConvert);
+    }
+
+    private LocalDate convToLocalDate(Date dateToConvert) {
+        return dateToConvert.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
     @GetMapping("/salary/{user_id}/{month}/{year}")
@@ -72,27 +77,34 @@ public class SalaryController {
         List<Task> taskData = taskRepository.findByResolvedAndAssigned(true, userData.getUsername());
 
         YearMonth yearMonth = YearMonth.of(Integer.parseInt(year), Month.of(Integer.parseInt(month)));
-        Float daysInMonth = Float.valueOf(yearMonth.lengthOfMonth());
         Float baseSalary = Float.parseFloat(userData.getBaseSalary());
-        Float dailySalary = baseSalary / daysInMonth;
-        Float fullSalary = 0f;
+        Float fullSalary = baseSalary;
 
         LocalDate firstOfMonth = yearMonth.atDay(1);
         LocalDate last = yearMonth.atEndOfMonth();
 
         for (Task task : taskData) {
+
+            Long points = Long.parseLong(task.getPoints());
+
             // date store like yyyy-MM-dd
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            Date endDate = sdf.parse(StringUtils.substring(task.getEta(), 0, 10));
-            Date startDate = sdf.parse(StringUtils.substring(task.getStartDate(), 0, 10));
 
-            if (endDate.after(toDate(firstOfMonth)) && endDate.before(toDate(last))
-                    && startDate.after(toDate(firstOfMonth)) && startDate.before(toDate(last))) {
+            Date endDate = sdf.parse(StringUtils.substring(task.getEta(), 0, 10));
+            LocalDate endDateMinusPoints = convToLocalDate(endDate).minusDays(points);
+
+            Date startDate = sdf.parse(StringUtils.substring(task.getStartDate(), 0, 10));
+            LocalDate startDatePlusPoints = convToLocalDate(startDate).plusDays(points);
+
+            if (convToDate(endDateMinusPoints).after(convToDate(firstOfMonth))
+                    && convToDate(endDateMinusPoints).before(convToDate(last))
+                    || convToDate(startDatePlusPoints).after(convToDate(firstOfMonth))
+                            && convToDate(startDatePlusPoints).before(convToDate(last))) {
                 Long estimatedDays = ChronoUnit.DAYS.between(startDate.toInstant(), endDate.toInstant());
-                Long points = Long.parseLong(task.getPoints());
                 Float estimationCoef = estimatedDays.floatValue() / points.floatValue();
 
-                fullSalary += dailySalary * estimationCoef * points.floatValue();
+                if (estimationCoef >= 1)
+                    fullSalary += 1000 * estimationCoef;
             }
         }
 

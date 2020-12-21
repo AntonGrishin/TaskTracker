@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { TaskStatuses, TaskStatusesModel } from 'src/app/models/task.model';
 import { TokenStorageService } from 'src/app/_services/token-storage.service';
+import { UserService } from 'src/app/_services/user.service';
 import { TaskService } from '../../_services/task.service';
 
 @Component({
@@ -14,7 +15,7 @@ export class TasksListComponent implements OnInit {
   currentTask = null;
   currentIndex = -1;
   title = '';
-
+  currentUser = null;
   isTaskEditMode = false;
 
   showAdminBoard = false;
@@ -28,7 +29,8 @@ export class TasksListComponent implements OnInit {
   newTaskTitle;
 
   constructor(private taskService: TaskService,
-              private tokenStorageService: TokenStorageService) { }
+              private tokenStorageService: TokenStorageService,
+              private userService: UserService) { }
 
   ngOnInit(): void {
     this.retrieveTasks();
@@ -38,6 +40,18 @@ export class TasksListComponent implements OnInit {
       this.showAdminBoard = this.user.roles.includes('ROLE_ADMIN');
       this.showModeratorBoard = this.user.roles.includes('ROLE_MODERATOR');
     }
+  }
+
+  getUserDetails(username): void {
+    this.userService.getUserByUsername(username)
+      .subscribe(
+        data => {
+          this.currentUser = data;
+          console.log(data);
+        },
+        error => {
+          console.log(error);
+        });
   }
 
   retrieveTasks(): void {
@@ -76,24 +90,13 @@ export class TasksListComponent implements OnInit {
   getTask(id, index): void {
     this.currentIndex = index;
     this.taskService.get(id).subscribe( newTask => {
+      this.getUserDetails(newTask.assigned);
       this.currentTask = newTask;
       this.currentTask.comments = this.currentTask.comments.map( comment => {
         comment.date = new Date(comment.date);
         return comment;
       });
     });
-  }
-
-  removeAllTasks(): void {
-    this.taskService.deleteAll()
-      .subscribe(
-        response => {
-          console.log(response);
-          this.refreshList();
-        },
-        error => {
-          console.log(error);
-        });
   }
 
   searchTitle(): void {

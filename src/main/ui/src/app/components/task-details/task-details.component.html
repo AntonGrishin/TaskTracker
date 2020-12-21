@@ -80,7 +80,7 @@
       Resolve
     </button>
 
-    <button class="badge badge-danger mr-2" (click)="deleteTask()">
+    <button *ngIf="isAdmin || isModerator" class="badge badge-danger mr-2" (click)="deleteTask()">
       Delete
     </button>
 

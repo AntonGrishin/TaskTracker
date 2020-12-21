@@ -51,9 +51,6 @@
         </li>
       </ul>
 
-      <button class="m-3 btn btn-sm btn-danger" (click)="removeAllTasks()">
-        Remove All
-      </button>
     </div>
     <div class="col-md-6">
       <div *ngIf="currentTask">
@@ -79,7 +76,7 @@
         </div>
         <div>
           <label><strong>Assigned:</strong></label>
-          {{ currentTask.assigned }}
+          {{ currentUser.lastname }}, {{ currentUser.firstname }}
         </div>
         <div>
           <label><strong>Points:</strong></label>

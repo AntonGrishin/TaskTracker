@@ -11,6 +11,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
   List<Task> findByResolved(boolean resolved);
 
   List<Task> findByTaskTitleContaining(String taskTitle);
+  List<Task> findByTaskTitleContainingAndAssigned(String taskTitle, String assigned);
   List<Task> findByAssigned(String assigne);
 
   List<Task> findByResolvedAndAssigned(boolean resolved, String assigned);
